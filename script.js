@@ -211,7 +211,7 @@ class WeatherWidget {
         let timeZone = data.timezone;
 
         // Возвращает обьект-опций для форматирования времени
-        let formater = new Intl.DateTimeFormat(undefined, {
+        let formatter = new Intl.DateTimeFormat(undefined, {
             timeZone: timeZone,
             hour: "2-digit",
             minute: "2-digit",
@@ -219,7 +219,7 @@ class WeatherWidget {
         });
 
         const render = () => {
-            let currentTime = formater.format(new Date());
+            let currentTime = formatter.format(new Date());
            let [hours, minutes, seconds] = currentTime.split(":");
             container.innerHTML = `
                 <b>${hours}</b>:<b>${minutes}</b>:<b>${seconds}</b>
@@ -237,7 +237,7 @@ class WeatherWidget {
             this.clockId = setInterval(() => render(), 1000);
     }
 
-    dateFormating(data, isShortMode){
+    dateFormatting(data, isShortMode){
         if (isShortMode) {
             return data.slice(5,10).split('-').reverse().join('. ');
         }
@@ -249,7 +249,7 @@ class WeatherWidget {
         return day === 0 ? day = 7 : day; 
     }
 
-    weatherCodeInterpritator(data, isIconMode, isNight) {
+    weatherCodeInterpreter(data, isIconMode, isNight) {
         // Для режима возвращающего иконки
         if(isIconMode) {
                 if(data === 0 ){
@@ -336,18 +336,18 @@ class WeatherWidget {
         }
         
         // Обьект с опциями для форматирования
-        let formater =  new Intl.DateTimeFormat(undefined, {
+        let formatter =  new Intl.DateTimeFormat(undefined, {
             hour: "2-digit",
             minute: "2-digit",
         });
         // Время восхода
-        sunriseTime = formater.format(new Date(data.daily.sunrise[0]));
+        sunriseTime = formatter.format(new Date(data.daily.sunrise[0]));
         // Избавляемся от ведущего нуля
         if(sunriseTime[0] === "0") {
             sunriseTime = sunriseTime.slice(1)
         }
         // Время заката
-        sunsetTime = formater.format(new Date(data.daily.sunset[0]));
+        sunsetTime = formatter.format(new Date(data.daily.sunset[0]));
         // Избавляемся от ведущего нуля
         if(sunsetTime[0] === "0") {
             sunsetTime = sunriseTime.slice(1)
@@ -367,7 +367,7 @@ class WeatherWidget {
                 <span>${data.current_units.temperature_2m}</span>
             </b>
             <p>
-                ${this.weatherCodeInterpritator(data.current.weather_code)}
+                ${this.weatherCodeInterpreter(data.current.weather_code)}
             </p>
             <p>
                 Ветер: ${data.current.wind_speed_10m} М/с<br>
@@ -404,7 +404,7 @@ class WeatherWidget {
         // Элемент с сегодняшней датой 
         let dateElem = document.createElement('span');
         // Сегодняшняя дата в массиве данных под индексом 1
-        dateElem.textContent = this.dateFormating(data.daily.time[0]);
+        dateElem.textContent = this.dateFormatting(data.daily.time[0]);
         cityBlock.append(dateElem);
 
         // Элемент с часами
@@ -481,15 +481,15 @@ class WeatherWidget {
             
             // Строка с датой
             let dateElem = document.createElement('span');
-            dateElem.innerHTML = `${this.dateFormating(data.daily.time[i], true)} ${currentDayOfWeek}`;
+            dateElem.innerHTML = `${this.dateFormatting(data.daily.time[i], true)} ${currentDayOfWeek}`;
             if(i === 0) {
-                dateElem.innerHTML = `${this.dateFormating(data.daily.time[i], true)} ${currentDayOfWeek}<br>Сегодня`;
+                dateElem.innerHTML = `${this.dateFormatting(data.daily.time[i], true)} ${currentDayOfWeek}<br>Сегодня`;
             }
             forecastElem.append(dateElem);
 
             // Строка с иконками погоды
             let precipitationType = document.createElement('div');
-            precipitationType.innerHTML =  this.weatherCodeInterpritator(data.daily.weather_code[i], true);
+            precipitationType.innerHTML =  this.weatherCodeInterpreter(data.daily.weather_code[i], true);
             forecastElem.append(precipitationType);
 
             // Строка с макс\мин температурой
@@ -519,14 +519,14 @@ class WeatherWidget {
         let timeZone = data.timezone;
         
         // Возвращает обьект-опций для форматирования времени
-        let formater = new Intl.DateTimeFormat(undefined, {
+        let formatter = new Intl.DateTimeFormat(undefined, {
             timeZone: timeZone,
             hour: "2-digit",
             minute: "2-digit",
         });
         let currentTime = new Date (new Date(data).setMinutes(0));
 
-        return formater.format(currentTime);
+        return formatter.format(currentTime);
     }
 
     renderHourlyForecast(container, data) {
@@ -555,9 +555,9 @@ class WeatherWidget {
 
             // Строка со временем и датой
             let timeElem = document.createElement('span');
-            timeElem.innerHTML = `${this.dateFormating(currentDate, true)} ${currentDayOfWeek}<br>${this.getForecastHourLabel(data.hourly.time[i])}`;
+            timeElem.innerHTML = `${this.dateFormatting(currentDate, true)} ${currentDayOfWeek}<br>${this.getForecastHourLabel(data.hourly.time[i])}`;
             if ( i == currentHour) {
-                timeElem.innerHTML = `${this.dateFormating(currentDate, true)} ${currentDayOfWeek}<br>${this.getForecastHourLabel(data.hourly.time[i])}<br>Сейчас`;
+                timeElem.innerHTML = `${this.dateFormatting(currentDate, true)} ${currentDayOfWeek}<br>${this.getForecastHourLabel(data.hourly.time[i])}<br>Сейчас`;
             }
             forecastElem.append(timeElem);
 
@@ -577,10 +577,10 @@ class WeatherWidget {
                 precipitation.innerHTML = '<i class="wi wi-sunset"></i>';
             } else if (forecastHour < sunriseHour || forecastHour > sunsetHour) {
                 // Сейчас ночь
-                precipitation.innerHTML = this.weatherCodeInterpritator(data.hourly.weather_code[i], true, true);
+                precipitation.innerHTML = this.weatherCodeInterpreter(data.hourly.weather_code[i], true, true);
             } else {
                 // Сейчас день
-                precipitation.innerHTML = this.weatherCodeInterpritator(data.hourly.weather_code[i], true);
+                precipitation.innerHTML = this.weatherCodeInterpreter(data.hourly.weather_code[i], true);
             }
 
             forecastElem.append(precipitation);
