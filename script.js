@@ -12,9 +12,13 @@ class WeatherWidget {
         this.citySearchResult = null;
         this.latitude = 0;
         this.longitude = 0;
+
         this.cityList = document.createElement('div');
         this.cityList.classList.add('hidden');
-        this.eventHandlers = this.eventHandlers.bind(this);
+
+        this.citySearchForm = document.createElement('form');
+        this.eventClickHandlers = this.eventClickHandlers.bind(this);
+        this.formEventHandler = this.formEventHandler.bind(this);
         this.init();
     }
 
@@ -27,6 +31,10 @@ class WeatherWidget {
         "Киев": { latitude: 50.450001, longitude: 30.523333 },
     }
 
+    cityWeatherKeys = {
+
+    }
+
     sortCities() {
         this.cityCoordinates = Object.fromEntries(
                 Object.entries(this.cityCoordinates)
@@ -34,9 +42,45 @@ class WeatherWidget {
         )
     }
 
+    renderCityManagementPane() {
+
+        this.mainWeatherBlock.innerHTML = " ";
+ 
+        const cityManagementPane = document.createElement('div');
+        cityManagementPane.classList.add('city-management-pane');
+        this.mainWeatherBlock.append(cityManagementPane);
+
+
+        this.citySearchForm.classList.add('city-search-form');
+        cityManagementPane.append(this.citySearchForm);
+        
+        const citySearchInput = document.createElement('input');
+        citySearchInput.classList.add('city-search-input');
+        this.defineBackgroundImage(citySearchInput)
+        citySearchInput.placeholder = 'Введите местоположение';
+        console.log(citySearchInput.placeholder)
+        this.citySearchForm.innerHTML ='<i class="fa-solid fa-magnifying-glass fa-shake"></i>';
+        this.citySearchForm.append(citySearchInput);
+/* 
+        const submitButton = document.createElement('button');
+        submitButton.classList.add('search-submit-button');
+        submitButton.textContent = 'Искать';
+        citySearchContainer.append(submitButton); */
+
+
+        const listOfAddedCities = document.createElement('div');
+        listOfAddedCities.classList.add('list-of-added-cities');
+        
+        cityManagementPane.append(listOfAddedCities);
+
+        this.renderCityList(listOfAddedCities);
+        this.defineBackgroundImage(cityManagementPane.querySelector('.list-elem'));
+
+    }
+
     async getCityCoords() {
 
-         let chosenCity = prompt('Введите название города');
+         let chosenCity = document.querySelector('input').value;
         if(!chosenCity) {
             return;
         }
@@ -199,6 +243,10 @@ class WeatherWidget {
         } else if (data.current.weather_code >= 71 && data.current.weather_code <= 77) {
             precipitationType = "snow";
         }
+
+        this.cityWeatherKeys[this.currentCity] = `${precipitationType}_${timeOfDay}`;
+
+        console.log(this.cityWeatherKeys)
         
         return `${precipitationType}_${timeOfDay}`;
     }
@@ -417,7 +465,7 @@ class WeatherWidget {
         let addBtn = document.createElement('button');
         addBtn.setAttribute('type', 'button');
         addBtn.setAttribute('data-action', 'add-city')
-        addBtn.textContent = "Добавить город";
+        addBtn.textContent = "Управление городами";
         addBtn.classList.add('btn');
         cityBlock.append(addBtn);
 
@@ -433,35 +481,21 @@ class WeatherWidget {
         // Наполняем список городов из обьекта с данными
         Object.keys(this.cityCoordinates).forEach(key => {
             let listElem = document.createElement('span');
-            listElem.classList.add('list-elem')
+            listElem.classList.add('list-elem');
             let cityTitle = document.createElement('h2');
             let deleteBtn = document.createElement('button');
             deleteBtn.classList.add('delete-btn');
             cityTitle.textContent = key;
-            deleteBtn.innerHTML = `
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" 
-                xmlns="http://www.w3.org/2000/svg" style="opacity: 0.5;"> 
-                <path d="M3 6H5H21" stroke="#4b4b4b" stroke-width="2" 
-                stroke-linecap="round" stroke-linejoin="round"/> 
-                <path d="M8 6V4C8 3.44772 8.44772 3 9 3H15C15.5523 
-                3 16 3.44772 16 4V6H19C19.5523 6 20 6.44772 20 7V8C20 8.55228 
-                19.5523 9 19 9H5C4.44772 9 4 8.55228 4 8V7C4 6.44772 4.44772 
-                6 5 6H8Z" fill="#4b4b4b"/> <path d="M10 11V17" stroke="#4b4b4b" 
-                stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/> 
-                <path d="M14 11V17" stroke="#4b4b4b" stroke-width="2" 
-                stroke-linecap="round" stroke-linejoin="round"/> <path d="M4 6H20" 
-                stroke="#4b4b4b" stroke-width="2" stroke-linecap="round" 
-                stroke-linejoin="round"/> <path d="M6 6L5 21C5 21.5523 5.44772 
-                22 6 22H18C18.5523 22 19 21.5523 19 21L18 6" stroke="#4b4b4b" 
-                stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            `;
+            deleteBtn.innerHTML = `<i class="fa-solid fa-trash"></i>`;
+
             listElem.append(cityTitle)
             listElem.append(deleteBtn);
-            this.cityList.append(listElem);
+            this.defineBackgroundImage(listElem)
+            container.append(listElem);
         });
         
-        this.cityList.classList.add('city-list');
-        container.append(this.cityList);
+/*         this.cityList.classList.add('city-list'); */
+/*         container.append(this.cityList); */
     }
     
     renderDailyForecast(container, data) {
@@ -619,10 +653,7 @@ class WeatherWidget {
 
     }
 
-    renderMainWeatherBlock(data) {
-        // Общий блок 
-        this.mainWeatherBlock.innerHTML = "";
-        // Расчет фонового изображения для общего блока
+    defineBackgroundImage(target, data){
         const backgroundUrls = { 
             'clear_day': './img/clear_day.png',
             'rain_day': './img/rain_day.png',
@@ -633,11 +664,25 @@ class WeatherWidget {
             'snow_night': './img/snow_night.png',
             'cloud_night': './img/cloud_night.png'
         };
-        let currentWeather = this.getWeatherKey(data);
-        let backgroundImageUrl = backgroundUrls[currentWeather] ||
-            backgroundUrls['clear_day'];
-        this.mainWeatherBlock.style.backgroundImage =
-            `url('${backgroundImageUrl}')`;
+
+        let currentWeatherKey;
+        if(data) {
+            currentWeatherKey = this.getWeatherKey(data);
+        } else if(target.firstElementChild) {
+            currentWeatherKey = this.cityWeatherKeys[target.firstElementChild.textContent];
+        } else {
+            currentWeatherKey = this.cityWeatherKeys[this.currentCity];
+        }
+        let backgroundImageUrl = backgroundUrls[currentWeatherKey];
+        target.style.backgroundImage = `url('${backgroundImageUrl}')`;
+    }
+
+    renderMainWeatherBlock(data) {
+        // Общий блок 
+        this.mainWeatherBlock.innerHTML = "";
+        // Расчет фонового изображения для общего блока
+        this.defineBackgroundImage(this.mainWeatherBlock, data)
+
         this.mainWeatherBlock.classList.add('main-wether-block');
         let mainWeatherBlockTop = document.createElement('div');
         mainWeatherBlockTop.classList.add('main-weather-block-top');
@@ -653,8 +698,6 @@ class WeatherWidget {
         this.renderTemperatureBlock(mainWeatherBlockTop, data);
         // Блок с городом, датой, часами и кнопками
         this.renderCItyBlock(data, mainWeatherBlockTop);
-        // Открывающийся список городов
-        this.renderCityList(mainWeatherBlockTop);
 
         // Низ 
         let mainWeatherBlockBottom = document.createElement('div');
@@ -669,18 +712,28 @@ class WeatherWidget {
     }
 
     initEventHandlers() {
-        this.container.addEventListener('click', this.eventHandlers)
+        this.container.addEventListener('click', this.eventClickHandlers);
+
+        this.citySearchForm.addEventListener('submit', this.formEventHandler);
+
     }
 
-    eventHandlers(event) {  
+    formEventHandler(event) {
+        event.preventDefault()
+        if(event.target.elements[0].value) {
+            this.getCityCoords(event.target.elements[0].value);
+            event.target.value = '';
+        }
+    }
+
+    eventClickHandlers(event) {  
         // Отобразить/скрыть список городов, удалить/добавить город и тд
         const deleteBtnClick = event.target.closest('.delete-btn');
-        const clickOnCityTitle = event.target.closest('h2');
-        const clickInCityList = event.target.closest('.city-list');
+        const clickOnCityTitle = event.target.closest('.list-elem > h2');
         const addBtnClick = event.target.closest('[data-action]');
         const clickOnSearchResult = event.target.dataset.searchIndex;
         const clickOnGetBackBtn = event.target.closest('.get-back-btn');
-        const clickOnForecastToggler = event.target.closest('[data-forecast-toggler]')
+        const clickOnForecastToggler = event.target.closest('[data-forecast-toggler]');
 
         //Еслли клик по кнопке удаления
         if (deleteBtnClick) {
@@ -706,25 +759,13 @@ class WeatherWidget {
         // Ну тут все очевидно надеюсь:)
         if(addBtnClick) {
             setTimeout( () => {
-                this.getCityCoords();
+                this.renderCityManagementPane()
             }, 250)
-        }
-
-        //Если клик был на город и список закрыт - открывем список
-        if (clickOnCityTitle && !clickInCityList) { 
-            setTimeout(() => {
-                this.cityList.classList.remove('hidden');
-            }, 250);
-        }
-
-        // Если клик вне списка городов - закрываем список
-        if (!clickInCityList) {
-            this.cityList.classList.add('hidden'); 
         }
 
         /*Если клик на город открытого списка - 
         выбираем город для рендера погоды и скрываем список */
-        if(clickOnCityTitle && clickInCityList) {
+        if(clickOnCityTitle) {
             this.currentCity = event.target.textContent;
             this.cityMainTitle.textContent = this.currentCity;
 
