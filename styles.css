@@ -163,6 +163,7 @@ body{
     ::-webkit-scrollbar-thumb{
         width: 5px;
         background: #00000034;
+        border-radius:25px;
     }
     
 }
@@ -206,20 +207,14 @@ body{
     background: #726e8d32;
     backdrop-filter: blur(2px);
     
-    
     h2{
         font-size: 30px;
-        cursor: pointer;
         height: fit-content;
         text-align: right;
         user-select: none;
         font-weight: 500;
     }
 
-    h2:active{
-        transform: scale(0.9);
-        transition-duration: 0.25s;
-    }
 
     p{
         font-size: 18px;
@@ -240,22 +235,40 @@ body{
     left: 0;
     top: 0;
     bottom: 0;
-    background-color: #726e8d45;
-    backdrop-filter: blur(100px);
+    background-color: #2a254b70;
+    backdrop-filter: blur(5px);
     border-radius: 10px;
-    padding: 25px 15px;
+    padding: 20px 30px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 40px;
     align-items: center;
     overflow-y: scroll;
+
+    .city-management-pane-hat{
+        display: flex;
+        justify-content: center;
+        font-size: 25px;
+        position: relative;
+        width: 100%;
+        
+        button{
+           position: absolute;
+           left: 0;
+           top: -1px;
+           font-size: 25px;
+        }
+
+        button:active{
+            transform: scale(0.9);
+        }
+    }
 
     .city-search-form{
         display: flex;
         align-items: center;
         position: relative;
-        width: 85%;
-        margin-bottom: 20px;
+        gap: 5px;
         
         i{
             position: absolute;
@@ -265,25 +278,37 @@ body{
         }
     
         .city-search-input{
-            width: 100%;
+
             height: 40px;
             color: #FFF;
             font-weight: 500;
             padding: 5px 10px 5px 45px;
-            border-top-left-radius: 10px;
-            border-bottom-left-radius: 10px;
+            border-radius: 10px;
             font-size: 20px;
             background-size: cover;
             background-position:top;
             background-repeat: no-repeat;
-    
+
+        }
+
+        .cancel-search-Btn{
+            width: 80px;
+            height: 40px;
+            border-radius: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+            background: #726e8d32;
+            backdrop-filter: blur(2px); 
+            color: #FFF;
+        }
+
+        .cancel-search-Btn:active{
+            transform: scale(0.9);
         }
 
         .search-submit-button{
             width: 80px;
             height: 40px;
-            color: #FFF;
-            background: #726e8d61;
+
             border-top-right-radius: 10px;
             border-bottom-right-radius: 10px;
 
@@ -301,7 +326,7 @@ body{
             margin: 0 auto;
             display: flex;
             justify-content: space-between;
-            width: 90%;
+            width: 100%;
             padding: 20px;
             height: 80px;
             border-radius: 15px;
@@ -311,81 +336,39 @@ body{
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-    
-            h2{
-                font-size: 25px;
-                cursor: pointer;
+            
+            div{
+
+                
+                h2{
+                    cursor: pointer;
+                    font-size: 25px;
+                 }
             }
+
     
             .delete-btn{
+                cursor: pointer;
                 font-size: 25px;
-                color:  #ff6a6a;
+                color:  #fff;
+                background: #ff6a6a;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
             }
-    
-        }
 
-    }
-
-}
-
-
-.city-list{
-    position: absolute;
-    top: 0 ;
-    right: 0;
-    min-width: 200px;
-    height: 100%;
-    width: auto;
-    max-width: 75%;
-    border-radius: 10px;
-    overflow-y: auto;
-    background-size: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    padding: 15px;
-    -webkit-tap-highlight-color: transparent;
-    background: #726e8d32;
-    backdrop-filter: blur(2px);
-
-    h2{
-        font-size: 22px;
-        cursor: pointer;
-        width: fit-content;
-        -webkit-tap-highlight-color: transparent;
-        max-width: 70%;
-    }
-
-    h2:active{
-        transform: scale(0.9);
-        transition-duration: 0.25s;
-    }
-
-/*     .list-elem{
-        display: flex;
-        justify-content: space-between;
-        gap: 40px;
-
-        .delete-btn{
-            opacity: 0.8;
-            svg{
-                fill: #000;
-            }
-            svg:active{
-                fill:red;
-                stroke: red;
+            .delete-btn:active{
                 transform: scale(0.9);
-                transition-duration: 0.25s;
             }
     
         }
-        .delete-btn:active{
-            transform: scale(0.9);
-            transition-duration: 0.25s;
 
-        }
-    } */
+    }
+
 }
+
+
+
 
 .hidden{
     display: none;
@@ -407,26 +390,28 @@ body{
 }
 
 .search-results-pane{
-    position: absolute;
-    right: 5px;
-    left: 5px;
-    top: 20px;
-    bottom: 20px;
-    overflow-y: auto;
-    border: #cecece solid 2px;
-    border-radius: 10px;
-    padding: 15px;
     display: flex;
     flex-direction: column;
     gap: 20px;
-    background: #726e8d32;
-    backdrop-filter: blur(5px);
+}
+
+.search-results-pane{
+    p:nth-child(1){
+        color: #b6b6b6;
+        line-height: 18px;
+    }
+    
 }
 
 .search-results-elem{
    cursor: pointer; 
    font-size: 20px;
    -webkit-tap-highlight-color: transparent;
+   background-color: #726e8d2c;
+   backdrop-filter: blur(2px);
+   border-radius: 15px;
+   padding: 10px;
+   
    
 }
 
@@ -495,6 +480,44 @@ body{
         }
     }
     
+}
+
+@media screen and (max-width: 420px) {
+    .city-management-pane{
+    
+        padding: 20px 20px;
+
+        .city-management-pane-hat{
+
+            .get-back-btn{
+                font-size: 20px;
+/*                 left: -2px; */
+            }
+
+            p{
+                font-size: 20px;
+            }
+        }
+
+        .city-search-form{
+            min-width: 240px;
+
+            i{
+                font-size: 19px;
+                left: 7px;
+            }
+
+            .city-search-input{
+                width: 220px;
+                font-size: 15px;
+                padding: 5px 5px 5px 30px;
+            }
+
+            .cancel-search-Btn{
+                width: 65px;
+            }
+        }
+    }
 }
 
 @media screen and (max-width: 400px){

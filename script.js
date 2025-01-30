@@ -13,12 +13,15 @@ class WeatherWidget {
         this.latitude = 0;
         this.longitude = 0;
 
-        this.cityList = document.createElement('div');
-        this.cityList.classList.add('hidden');
-
+        this.listOfAddedCities = document.createElement('div');
         this.citySearchForm = document.createElement('form');
+        this.cancelSearchBtn = document.createElement('button');
+        this.citySearchInput = document.createElement('input');
+
         this.eventClickHandlers = this.eventClickHandlers.bind(this);
-        this.formEventHandler = this.formEventHandler.bind(this);
+        this.formSubmitHandler = this.formSubmitHandler.bind(this);
+        this.inputFocusHandler = this.inputFocusHandler.bind(this);
+        this.inputBlurHandler = this.inputBlurHandler.bind(this);
         this.init();
     }
 
@@ -44,43 +47,52 @@ class WeatherWidget {
 
     renderCityManagementPane() {
 
-        this.mainWeatherBlock.innerHTML = " ";
- 
+        // Основная панель управления городами
         const cityManagementPane = document.createElement('div');
         cityManagementPane.classList.add('city-management-pane');
         this.mainWeatherBlock.append(cityManagementPane);
 
+        // Шапка панели: Кнопка "Назад" и заголовок
+        const cityManagementPaneHat = document.createElement('div');
+        cityManagementPaneHat.classList.add('city-management-pane-hat');
 
+        const getBackBtn = document.createElement('button');
+        getBackBtn.classList.add('get-back-btn');
+        getBackBtn.innerHTML = '<i class="fa-solid fa-arrow-left"></i>'
+        cityManagementPaneHat.append(getBackBtn);
+
+        const cityManagementPaneTitle = document.createElement('p');
+        cityManagementPaneTitle.textContent = 'Управление городами';
+        cityManagementPaneHat.append(cityManagementPaneTitle);
+
+        cityManagementPane.append(cityManagementPaneHat);
+
+        // Форма-контейнер 
         this.citySearchForm.classList.add('city-search-form');
         cityManagementPane.append(this.citySearchForm);
         
-        const citySearchInput = document.createElement('input');
-        citySearchInput.classList.add('city-search-input');
-        this.defineBackgroundImage(citySearchInput)
-        citySearchInput.placeholder = 'Введите местоположение';
-        console.log(citySearchInput.placeholder)
-        this.citySearchForm.innerHTML ='<i class="fa-solid fa-magnifying-glass fa-shake"></i>';
-        this.citySearchForm.append(citySearchInput);
-/* 
-        const submitButton = document.createElement('button');
-        submitButton.classList.add('search-submit-button');
-        submitButton.textContent = 'Искать';
-        citySearchContainer.append(submitButton); */
-
-
-        const listOfAddedCities = document.createElement('div');
-        listOfAddedCities.classList.add('list-of-added-cities');
+        // Поле ввода для поиска/добавления городов
         
-        cityManagementPane.append(listOfAddedCities);
+        this.citySearchInput.classList.add('city-search-input');
+        // Определить фоновое изображение и текст поля ввода
+        this.defineBackgroundImage(this.citySearchInput);
+        this.citySearchInput.placeholder = 'Введите местоположение';
+        // Добавить иконку-лупу
+        this.citySearchForm.innerHTML ='<i class="fa-solid fa-magnifying-glass"></i>';
+        this.citySearchForm.append(this.citySearchInput);
 
-        this.renderCityList(listOfAddedCities);
+        // Список добавленных городов
+        this.listOfAddedCities.classList.add('list-of-added-cities');
+        cityManagementPane.append(this.listOfAddedCities);
+        // Наполнить список городами
+        this.renderCityList(this.listOfAddedCities);
+        // Определить фоновое изображение для каждого города в списке
         this.defineBackgroundImage(cityManagementPane.querySelector('.list-elem'));
-
     }
 
     async getCityCoords() {
 
-         let chosenCity = document.querySelector('input').value;
+         let chosenCity = this.citySearchInput.value;
         if(!chosenCity) {
             return;
         }
@@ -88,7 +100,7 @@ class WeatherWidget {
             alert("Город уже добавлен");
             return;
         }
-    
+
         try {
             let response = await fetch(`https://nominatim.openstreetmap.org/search?q=${chosenCity}&format=json`);
     
@@ -105,9 +117,9 @@ class WeatherWidget {
             if(this.citySearchResult.length === 0) {
                 alert("Ничего не найдено уточните ваш запрос");
                 return;
-            } else if(this.citySearchResult.length === 1) {
+            } /* else if(this.citySearchResult.length === 1) {
                 this.processingSingleCity(this.citySearchResult, 0);
-            } else {
+            }  */else {
                 this.renderSearchResults(this.citySearchResult)
             }
     
@@ -121,19 +133,13 @@ class WeatherWidget {
         // Панель результатов поиска 
         this.searchResultsPane.innerHTML = "";
         this.searchResultsPane.classList.add('search-results-pane');
-        // Кнопка назад
-        let getBackBtn = document.createElement('button');
-        getBackBtn.setAttribute('type', 'button');
-        getBackBtn.classList.add('get-back-btn');
-        getBackBtn.textContent = '⇐ Вернуться назад';
         // Подсказка
         let tooltip = document.createElement('p');
-        tooltip.textContent = `Если полученых результатов недостаточно,
+        tooltip.textContent = `Если полученных результатов недостаточно,
             уточните ваш запрос`;
         // Рендер
-        this.searchResultsPane.append(getBackBtn);
         this.searchResultsPane.append(tooltip);
-        this.mainWeatherBlock.append(this.searchResultsPane);
+        this.mainWeatherBlock.querySelector('.city-management-pane').append(this.searchResultsPane);
         // Наполнить панель результатами и добавить индекс к результату
         for(let i = 0; i < citySearchResult.length; i++) {
             let searchResultElem = document.createElement('p');
@@ -144,7 +150,18 @@ class WeatherWidget {
         }
     }
 
-    processingSingleCity(citySearchResult, index) {
+    processingSingleCity(citySearchResult, index, isAddToCityListOnly) {
+        
+        if(isAddToCityListOnly) {
+        // Просто добавить город в список?
+            this.latitude = citySearchResult[index].lat;
+            this.longitude = citySearchResult[index].lon;
+            this.cityCoordinates[citySearchResult[index].name] = {longitude: this.longitude, latitude: this.latitude};
+            this.sortCities()
+            this.fetchWeather(true, citySearchResult[index].name);
+            return;
+        }
+
         // Обработать выбранный город
         this.currentCity = citySearchResult[index].name;
         this.latitude = citySearchResult[index].lat;
@@ -155,30 +172,46 @@ class WeatherWidget {
         this.fetchWeather();
     }
 
-    async fetchWeather() {
+    async fetchWeather(isShortMode, cityName) {
 
-        const params = {
-            latitude: this.cityCoordinates[this.currentCity].latitude,
-            longitude : this.cityCoordinates[this.currentCity].longitude,
-            timezone: "auto",
-            current: "temperature_2m,wind_speed_10m,rain,snowfall,weather_code,relative_humidity_2m,is_day,precipitation,wind_direction_10m",
-            wind_speed_unit: "ms",
-            forecast_days: "7",
-            daily: "sunrise,sunset,weather_code,temperature_2m_max,temperature_2m_min,wind_speed_10m_max,wind_direction_10m_dominant",
-            hourly: "temperature_2m,precipitation_probability,weather_code",
-            
-        };
+    let params;
 
-        const url = `
-            https://api.open-meteo.com/v1/forecast?${new URLSearchParams( params ).toString()}
-        `;
+        if (isShortMode) {
+            params = {
+                latitude: this.cityCoordinates[cityName].latitude,
+                longitude : this.cityCoordinates[cityName].longitude,
+                timezone: "auto",
+                current: "temperature_2m,weather_code,is_day",
+                daily: "temperature_2m_max,temperature_2m_min",
+            };
+
+        } else {
+            params = {
+                latitude: this.cityCoordinates[this.currentCity].latitude,
+                longitude : this.cityCoordinates[this.currentCity].longitude,
+                timezone: "auto",
+                current: "temperature_2m,wind_speed_10m,rain,snowfall,weather_code,relative_humidity_2m,is_day,precipitation,wind_direction_10m",
+                wind_speed_unit: "ms",
+                forecast_days: "7",
+                daily: "sunrise,sunset,weather_code,temperature_2m_max,temperature_2m_min,wind_speed_10m_max,wind_direction_10m_dominant",
+                hourly: "temperature_2m,precipitation_probability,weather_code",
+            };
+        }
+
+        const url = `https://api.open-meteo.com/v1/forecast?${new URLSearchParams( params ).toString()}`;
+
         try {    
             const response = await fetch(url);
             if (!response.ok) {
                 throw new Error(`Ошибка сервера ${response.status}`);
             }
     
-            let weatherData = await response.json();
+            const weatherData = await response.json();
+
+            if(isShortMode) {
+                this.renderCityList(this.listOfAddedCities, weatherData, cityName);
+                return; 
+            }
             console.log(weatherData);
             this.renderMainWeatherBlock(weatherData);
         } catch(error) {
@@ -229,7 +262,7 @@ class WeatherWidget {
         };
     }
 
-    getWeatherKey(data) {
+    getWeatherKey(data, cityNameForWeatherKey) {
         let timeOfDay = data.current.is_day > 0 ? 'day' : 'night';
         let precipitationType;
         
@@ -244,11 +277,18 @@ class WeatherWidget {
             precipitationType = "snow";
         }
 
-        this.cityWeatherKeys[this.currentCity] = `${precipitationType}_${timeOfDay}`;
-
-        console.log(this.cityWeatherKeys)
+        // Запомнить текущую погоду и время суток для расчета фонового изображения
+        if(cityNameForWeatherKey) {
+            this.cityWeatherKeys[cityNameForWeatherKey] = `${precipitationType}_${timeOfDay}`;
+        } else {
+            this.cityWeatherKeys[this.currentCity] = `${precipitationType}_${timeOfDay}`;
+        }
         
         return `${precipitationType}_${timeOfDay}`;
+    }
+
+    updateWeatherKeys() {
+        
     }
 
     clockRender(container, data) {
@@ -258,7 +298,7 @@ class WeatherWidget {
 
         let timeZone = data.timezone;
 
-        // Возвращает обьект-опций для форматирования времени
+        // Возвращает объект-опций для форматирования времени
         let formatter = new Intl.DateTimeFormat(undefined, {
             timeZone: timeZone,
             hour: "2-digit",
@@ -273,7 +313,7 @@ class WeatherWidget {
                 <b>${hours}</b>:<b>${minutes}</b>:<b>${seconds}</b>
             `;
 
-        // Автообновление каждые 15 минут
+        // Авто-обновление каждые 15 минут
             if ( (Number(minutes) % 15 === 0) && seconds === '00') { 
                 setTimeout( () => {
                     this.fetchWeather();
@@ -315,15 +355,17 @@ class WeatherWidget {
                 } else if(data === 3) {
                     return `<i class="wi wi-cloudy"></i>`;
                 } else if(data === 45) {
-                    return `<i class="wi wi-fog"</i>`;
+                    return `<i class="wi wi-fog"></i>`;
                 } else if( data >= 46 && data <= 67) {
-                    return `<i class="wi wi-showers"</i>`;
+                    return `<i class="wi wi-showers"></i>`;
                 } else if( data >= 71 && data <= 77) {
-                    return `<i class="wi wi-snow"</i>`;
+                    return `<i class="wi wi-snow"></i>`;
                 } else if(data >= 80 && data <= 82){
-                    return `<i class="wi wi-rain"</i>`
+                    return `<i class="wi wi-rain"></i>`
+                } else if(data >= 82 && data <= 86) {
+                    return `<i class="wi wi-sleet"></i>`;
                 } else if(data >= 95 && data <= 99) {
-                    return `<i class="wi thunderstorm"</i>`;
+                    return `<i class="wi wi-thunderstorm"></i>`;
                 }
                 return;
         }
@@ -361,6 +403,7 @@ class WeatherWidget {
     }
 
     roundToNearestHour(data) {
+    // Округлить до ближайшего часа для расчета времени восхода/заката
         let date = new Date(data);
         if(date.getMinutes() >= 30) {
             date.setHours(date.getHours() + 1);
@@ -383,7 +426,7 @@ class WeatherWidget {
             return [sunriseTime.getHours(), sunsetTime.getHours()];
         }
         
-        // Обьект с опциями для форматирования
+        // Объект с опциями для форматирования
         let formatter =  new Intl.DateTimeFormat(undefined, {
             hour: "2-digit",
             minute: "2-digit",
@@ -391,13 +434,13 @@ class WeatherWidget {
         // Время восхода
         sunriseTime = formatter.format(new Date(data.daily.sunrise[0]));
         // Избавляемся от ведущего нуля
-        if(sunriseTime[0] === "0") {
+        if(sunriseTime[0] === "0" && sunriseTime[1] !== "0") {
             sunriseTime = sunriseTime.slice(1)
         }
         // Время заката
         sunsetTime = formatter.format(new Date(data.daily.sunset[0]));
         // Избавляемся от ведущего нуля
-        if(sunsetTime[0] === "0") {
+        if(sunsetTime[0] === "0" && sunsetTime[1] !== "0") {
             sunsetTime = sunriseTime.slice(1)
         }
         return [sunriseTime, sunsetTime];
@@ -473,29 +516,45 @@ class WeatherWidget {
         container.append(cityBlock);
     }
 
-    renderCityList(container) {
+    renderCityList(container, data, cityName) {
         // Создать открывающийся список городов
-        this.cityList.innerHTML = "";
+        container.innerHTML = "";
         // Сортируем объект с городами перед отрисовкой
         this.sortCities();
-        // Наполняем список городов из обьекта с данными
+        // Наполняем список городов из объекта с данными
         Object.keys(this.cityCoordinates).forEach(key => {
-            let listElem = document.createElement('span');
+            let listElem = document.createElement('div');
             listElem.classList.add('list-elem');
+            const cityInfoElement = document.createElement('div');
+            const temperatureElem = document.createElement('span');
+
+            
+/*             if(data) {
+                temperatureElem.innerHTML = `${data.current.temperature_2m} + ${data.current_units.temperature_2m}`;
+            } */
+
+
             let cityTitle = document.createElement('h2');
+            listElem.append(cityInfoElement);
+            cityInfoElement.append(cityTitle);
+            cityInfoElement.append(temperatureElem);
+
+            // Кнопка удаления
             let deleteBtn = document.createElement('button');
             deleteBtn.classList.add('delete-btn');
             cityTitle.textContent = key;
-            deleteBtn.innerHTML = `<i class="fa-solid fa-trash"></i>`;
+            deleteBtn.innerHTML = `<i class="fa-regular fa-trash-can"></i>`;
 
-            listElem.append(cityTitle)
+            
             listElem.append(deleteBtn);
-            this.defineBackgroundImage(listElem)
+   
+            if(key === cityName) {
+                this.defineBackgroundImage(listElem, data, cityName);
+            } else {
+                this.defineBackgroundImage(listElem, false, key);
+            }
             container.append(listElem);
         });
-        
-/*         this.cityList.classList.add('city-list'); */
-/*         container.append(this.cityList); */
     }
     
     renderDailyForecast(container, data) {
@@ -509,7 +568,7 @@ class WeatherWidget {
             forecastElem.classList.add('daily-forecast-elem');
             forecastElem.style.minWidth = Math.round(container.offsetWidth / 3) - 4 + 'px';
 
-            // Расчитать текущий день недели
+            // Рассчитать текущий день недели
             const daysOfWeek = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
             const currentDayOfWeek = daysOfWeek[this.getEuroDay(new Date(data.daily.time[i])) - 1];
             
@@ -526,7 +585,7 @@ class WeatherWidget {
             precipitationType.innerHTML =  this.weatherCodeInterpreter(data.daily.weather_code[i], true);
             forecastElem.append(precipitationType);
 
-            // Строка с макс\мин температурой
+            // Строка с макс/мин температурой
             let tempElem = document.createElement('p');
             tempElem.innerHTML = `
                 Макс ${data.daily.temperature_2m_max[i]} ${data.daily_units.temperature_2m_max}<br>
@@ -552,7 +611,7 @@ class WeatherWidget {
         // Отформатировать время для часового прогноза
         let timeZone = data.timezone;
         
-        // Возвращает обьект-опций для форматирования времени
+        // Возвращает объект-опций для форматирования времени
         let formatter = new Intl.DateTimeFormat(undefined, {
             timeZone: timeZone,
             hour: "2-digit",
@@ -582,7 +641,7 @@ class WeatherWidget {
             forecastElem.classList.add('hourly-forecast-elem');
             forecastElem.style.minWidth = Math.round(container.offsetWidth / 4) - 4 + 'px';
 
-            // Расчитать текущий день недели
+            // Рассчитать текущий день недели
             const daysOfWeek = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
             let currentDayOfWeek = daysOfWeek[this.getEuroDay(new Date(data.hourly.time[i])) - 1];
             let currentDate = data.hourly.time[i];
@@ -600,13 +659,14 @@ class WeatherWidget {
             tempElem.textContent = data.hourly.temperature_2m[i] + data.hourly_units.temperature_2m;
             forecastElem.append(tempElem);
 
-            // Строка с описанием погоды
+            // Иконка с описанием погоды
             let precipitation = document.createElement('div');
             let forecastHour = new Date(data.hourly.time[i]).getHours();
-            if (forecastHour === sunriseHour) {
+            // Отрисовать иконку соответственно времени суток
+            if (forecastHour === sunriseHour && sunriseHour !== sunsetHour) {
                 // Сейчас рассвет
                 precipitation.innerHTML = '<i class="wi wi-sunrise"></i>';
-            } else if(forecastHour === sunsetHour) {
+            } else if(forecastHour === sunsetHour && sunriseHour !== sunsetHour) {
                 // Сейчас закат
                 precipitation.innerHTML = '<i class="wi wi-sunset"></i>';
             } else if (forecastHour < sunriseHour || forecastHour > sunsetHour) {
@@ -653,7 +713,8 @@ class WeatherWidget {
 
     }
 
-    defineBackgroundImage(target, data){
+    defineBackgroundImage(target, data, cityName){
+        // Определить фоновое изображение для target
         const backgroundUrls = { 
             'clear_day': './img/clear_day.png',
             'rain_day': './img/rain_day.png',
@@ -667,10 +728,13 @@ class WeatherWidget {
 
         let currentWeatherKey;
         if(data) {
-            currentWeatherKey = this.getWeatherKey(data);
+            // Если есть текущие данные получаем ключ исходя из них
+            currentWeatherKey = this.getWeatherKey(data, cityName);
         } else if(target.firstElementChild) {
+            // Если текущих данных нет, берем ключ из памяти по названию таргет-города (для списка добавленных городов)
             currentWeatherKey = this.cityWeatherKeys[target.firstElementChild.textContent];
         } else {
+            // Если текущих данных нет, и расчет не для списка городов - берем ключ по названию, отображаемого в основной панели, города (для input в панели управления городами)
             currentWeatherKey = this.cityWeatherKeys[this.currentCity];
         }
         let backgroundImageUrl = backgroundUrls[currentWeatherKey];
@@ -681,10 +745,10 @@ class WeatherWidget {
         // Общий блок 
         this.mainWeatherBlock.innerHTML = "";
         // Расчет фонового изображения для общего блока
-        this.defineBackgroundImage(this.mainWeatherBlock, data)
+        this.defineBackgroundImage(this.mainWeatherBlock, data);
 
         this.mainWeatherBlock.classList.add('main-wether-block');
-        let mainWeatherBlockTop = document.createElement('div');
+        const mainWeatherBlockTop = document.createElement('div');
         mainWeatherBlockTop.classList.add('main-weather-block-top');
 
         // Отрисовка всего:
@@ -700,52 +764,101 @@ class WeatherWidget {
         this.renderCItyBlock(data, mainWeatherBlockTop);
 
         // Низ 
-        let mainWeatherBlockBottom = document.createElement('div');
+        const mainWeatherBlockBottom = document.createElement('div');
         mainWeatherBlockBottom.classList.add('main-weather-block-bottom');
         this.mainWeatherBlock.append(mainWeatherBlockBottom);
         // Переключатель прогноза часовой\недельный
         this.renderForecastToggler(mainWeatherBlockBottom);
         // Недельный прогноз
         this.renderDailyForecast(mainWeatherBlockBottom, data);
-        // Почасовый прогноз
+        // Почасовой прогноз
         this.renderHourlyForecast(mainWeatherBlockBottom, data)
     }
 
     initEventHandlers() {
         this.container.addEventListener('click', this.eventClickHandlers);
 
-        this.citySearchForm.addEventListener('submit', this.formEventHandler);
+        this.citySearchForm.addEventListener('submit', this.formSubmitHandler);
+
+       this.citySearchInput.addEventListener('focusin', this.inputFocusHandler);
+
+
 
     }
 
-    formEventHandler(event) {
-        event.preventDefault()
+    formSubmitHandler(event) {
+        event.preventDefault();
+
         if(event.target.elements[0].value) {
             this.getCityCoords(event.target.elements[0].value);
             event.target.value = '';
         }
     }
 
+    inputFocusHandler() {
+
+        this.mainWeatherBlock.querySelector('.list-of-added-cities').style.display = 'none';
+
+        this.citySearchForm.firstElementChild.classList.add('fa-shake')
+
+        this.cancelSearchBtn.classList.add('cancel-search-Btn');
+        this.cancelSearchBtn.setAttribute('type', 'button');
+        this.cancelSearchBtn.textContent = 'Отмена';
+
+        this.citySearchForm.append(this.cancelSearchBtn);
+    }
+
+    inputBlurHandler() {
+        this.citySearchForm.firstElementChild.classList.remove('fa-shake');
+    }
+
+    cancelSearch() {
+        /* Метод для выхода из режима поиска для кнопок 
+        "Выйти из панели управления городами", "Отменить поиск" или
+        если выбран результат поиска */
+
+        // Возвращаем отображаем список городов
+        this.mainWeatherBlock.querySelector('.list-of-added-cities').style.display = 'flex';
+        // Сбрасываем и расфокусируем форму
+        this.citySearchForm.elements[0].value = '';
+        this.citySearchForm.elements[0].blur();
+        this.citySearchForm.firstElementChild.classList.remove('fa-shake');
+
+        if(document.querySelector('.cancel-search-Btn')){
+        // Убираем кнопку "отменить поиск"
+        document.querySelector('.cancel-search-Btn').remove();
+        }
+        const searchResultsPane = document.querySelector('.search-results-pane');
+        if(searchResultsPane) {
+            // Убираем панель результатов поиска если она есть
+            searchResultsPane.remove();
+        }
+    }
+
     eventClickHandlers(event) {  
         // Отобразить/скрыть список городов, удалить/добавить город и тд
         const deleteBtnClick = event.target.closest('.delete-btn');
-        const clickOnCityTitle = event.target.closest('.list-elem > h2');
+        const clickOnCityTitle = event.target.closest('.list-elem > div > h2');
         const addBtnClick = event.target.closest('[data-action]');
         const clickOnSearchResult = event.target.dataset.searchIndex;
         const clickOnGetBackBtn = event.target.closest('.get-back-btn');
         const clickOnForecastToggler = event.target.closest('[data-forecast-toggler]');
+        const clickOnSearchCancelBtn = event.target.closest('.cancel-search-Btn');
 
-        //Еслли клик по кнопке удаления
+
+
+        //Если клик по кнопке удаления
         if (deleteBtnClick) {
             const targetListElem = event.target.closest('.list-elem');
-            const targetListElemTitle = targetListElem
-                .children[0].textContent;
-                
+            const targetListElemTitle = targetListElem.children[0].textContent;
+            // Если добавленный в список город всего 1 - не удалять
+            if(this.listOfAddedCities.children.length === 1) return;
+            // Если удаляем текущий город - запросить данные на следующий
             if (targetListElemTitle === this.currentCity) {    
                 setTimeout(() => {
                     targetListElem.remove();
                     delete this.cityCoordinates[targetListElemTitle];
-                    this.currentCity = this.cityList.firstElementChild.children[0].textContent;
+                    this.currentCity = this.listOfAddedCities.firstElementChild.children[0].textContent;
                     this.fetchWeather();
                 }, 250);
             } else {
@@ -759,28 +872,31 @@ class WeatherWidget {
         // Ну тут все очевидно надеюсь:)
         if(addBtnClick) {
             setTimeout( () => {
-                this.renderCityManagementPane()
-            }, 250)
+                this.renderCityManagementPane();
+                this.citySearchInput.addEventListener('blur', this.inputBlurHandler);
+            }, 250);
         }
 
-        /*Если клик на город открытого списка - 
-        выбираем город для рендера погоды и скрываем список */
+        /*Если клик на город из списка - 
+        выбираем город для отображения погоды*/
         if(clickOnCityTitle) {
             this.currentCity = event.target.textContent;
             this.cityMainTitle.textContent = this.currentCity;
 
             setTimeout( () => {
-                this.cityList.classList.add('hidden')
+                    this.fetchWeather();
             }, 250);
 
-            this.fetchWeather();
+
         };
 
         // Выбрать подходящий результат поиска
         if(clickOnSearchResult) {
             setTimeout(() => {
                 const searchResultIndex = event.target.dataset.searchIndex;
-                this.processingSingleCity(this.citySearchResult, searchResultIndex);
+                this.processingSingleCity(this.citySearchResult, searchResultIndex, true);
+
+                this.cancelSearch()
             }, 250);
 
         }
@@ -788,8 +904,8 @@ class WeatherWidget {
         // Если клик на кнопку назад
         if(clickOnGetBackBtn) {
             setTimeout(() => {
-                this.searchResultsPane.innerHTML = "";
-                this.searchResultsPane.remove()   
+                this.cancelSearch()
+                this.mainWeatherBlock.querySelector('.city-management-pane').remove();
             }, 250);
         }
 
@@ -827,6 +943,13 @@ class WeatherWidget {
                 hourlyForecast.style.display = '';
                 dailyForecast.style.display = 'none'
             }
+        }
+
+        // Если клик на кнопку "отменить поиск"
+        if(clickOnSearchCancelBtn) {
+            setTimeout(() => {
+                this.cancelSearch()
+            }, 150);
         }
     }
 }
