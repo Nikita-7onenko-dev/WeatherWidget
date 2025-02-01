@@ -147,7 +147,7 @@ class WeatherWidget {
         }
     }
 
-    async processingSingleCity(citySearchResult, index) {
+    processingSingleCity(citySearchResult, index) {
         // Просто добавить город в список
             this.latitude = citySearchResult[index].lat;
             this.longitude = citySearchResult[index].lon;
@@ -369,8 +369,14 @@ class WeatherWidget {
             } else if(forecastHour === sunsetHour && sunriseHour !== sunsetHour) {
                 // Сейчас закат
                 precipitation.innerHTML = '<i class="wi wi-sunset"></i>';
-            } else if (forecastHour < sunriseHour || forecastHour > sunsetHour || this.cityWeatherData[this.currentCity].current.is_day === 0) {
+            } else if (forecastHour < sunriseHour || forecastHour > sunsetHour && sunriseHour !== sunsetHour) {
                 // Сейчас ночь
+                precipitation.innerHTML = this.weatherCodeInterpreter(data.hourly.weather_code[currentHour + i], true, true);
+            } else if (sunsetHour === sunsetHour && data.current.is_day === 1){
+                // Полярный день
+                precipitation.innerHTML = this.weatherCodeInterpreter(data.hourly.weather_code[currentHour + i], true);
+            } else if (forecastHour < sunriseHour || forecastHour > sunsetHour && sunriseHour === sunsetHour ){
+                // Полярная ночь
                 precipitation.innerHTML = this.weatherCodeInterpreter(data.hourly.weather_code[currentHour + i], true, true);
             } else {
                 // Сейчас день
@@ -541,7 +547,6 @@ class WeatherWidget {
 
         let temperatureBlock = document.createElement('div');   
         temperatureBlock.classList.add('temperature-block');
-
         temperatureBlock.innerHTML = `
             <b data-main-temperature-field>
                 <span data-main-temperature-unit-field></span>
