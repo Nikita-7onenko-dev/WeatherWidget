@@ -328,33 +328,38 @@ body{
             justify-content: space-between;
             width: 100%;
             padding: 20px;
-            height: 80px;
+            height: fit-content;
             border-radius: 15px;
-            align-items: center;
-            background-clip: border-box;    
-            border-radius: 15px;
+            align-items: center;  
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
             
             div{
+                max-width: 50%;
 
-                
                 h2{
                     cursor: pointer;
-                    font-size: 25px;
+                    font-size: 23px;
+                    padding-bottom: 5px;
+                    width: fit-content;
+                 }
+
+                 span{
+                    font-size: 18px;
+                    padding-left: 2px;
                  }
             }
 
     
             .delete-btn{
                 cursor: pointer;
-                font-size: 25px;
+                font-size: 22px;
                 color:  #fff;
                 background: #ff6a6a;
                 border-radius: 50%;
-                width: 40px;
-                height: 40px;
+                width: 45px;
+                height: 45px;
             }
 
             .delete-btn:active{
@@ -377,11 +382,11 @@ body{
 .btn{
     padding: 10px;
     width: fit-content;
-    color: inherit;
     border-radius: 10px;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
     background: #726e8d32;
     backdrop-filter: blur(2px);
+    color: #FFF;
 }
 
 .btn:active{
@@ -491,7 +496,6 @@ body{
 
             .get-back-btn{
                 font-size: 20px;
-/*                 left: -2px; */
             }
 
             p{
@@ -514,7 +518,7 @@ body{
             }
 
             .cancel-search-Btn{
-                width: 65px;
+                width: 70px;
             }
         }
     }
