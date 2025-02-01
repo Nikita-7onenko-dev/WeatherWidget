@@ -1,6 +1,5 @@
 // Виджет прогноз погоды с помощью класса, fetch и API 
 
-
 class WeatherWidget {
     constructor(container) {
         this.container = container;
@@ -353,7 +352,7 @@ class WeatherWidget {
             // Строка со временем и датой
             let forecastHour = new Date(data.hourly.time[currentHour + i]).getHours();
             let currentDate = data.hourly.time[i];
-            this.mainWeatherBlock.querySelector(`[data-hourly-time-field="${i}"]`).innerHTML = `${this.dateFormatting(currentDate, true)} ${this.defineWeekDay(data, true, i, true)}<br>${this.getForecastHourLabel(data.hourly.time[forecastHour])}`;
+            this.mainWeatherBlock.querySelector(`[data-hourly-time-field="${i}"]`).innerHTML = `${this.dateFormatting(currentDate, true)} ${this.defineWeekDay(data, true, currentHour + i, true)}<br>${this.getForecastHourLabel(data.hourly.time[forecastHour])}`;
             if ( i == 0) {
                 this.mainWeatherBlock.querySelector(`[data-hourly-time-field="${i}"]`).insertAdjacentHTML('beforeend', '<br>Сейчас');
             }
@@ -363,7 +362,6 @@ class WeatherWidget {
 
             // Иконка с описанием погоды
             let precipitation = this.mainWeatherBlock.querySelector(`[data-hourly-precipitation-icon-field="${i}"]`);
-
             // Отрисовать иконку соответственно времени суток
             if (forecastHour === sunriseHour && sunriseHour !== sunsetHour) {
                 // Сейчас рассвет
@@ -371,7 +369,7 @@ class WeatherWidget {
             } else if(forecastHour === sunsetHour && sunriseHour !== sunsetHour) {
                 // Сейчас закат
                 precipitation.innerHTML = '<i class="wi wi-sunset"></i>';
-            } else if (forecastHour < sunriseHour || this.cityWeatherData[this.currentCity].current.is_day === 0) {
+            } else if (forecastHour < sunriseHour || forecastHour > sunsetHour || this.cityWeatherData[this.currentCity].current.is_day === 0) {
                 // Сейчас ночь
                 precipitation.innerHTML = this.weatherCodeInterpreter(data.hourly.weather_code[currentHour + i], true, true);
             } else {
@@ -890,7 +888,6 @@ class WeatherWidget {
                     delete this.cityWeatherData[targetListElemTitle];
                     targetListElem.remove();
                     this.currentCity = this.listOfAddedCities.firstElementChild.firstElementChild.firstElementChild.textContent;
-                    console.log(this.currentCity)
                     this.updateWeatherData();
                 }, 400);
                
