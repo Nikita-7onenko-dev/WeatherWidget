@@ -90,6 +90,18 @@ body{
             }
         }
 
+
+        .activated-forecast-button{
+            background-color: #726e8d74;
+            font-weight: 500;
+            border: 1px solid #fff;
+        }
+
+        .deactivated-forecast-button{
+            font-weight: initial;
+            border: none;
+        }
+
         .daily-forecast-block, .hourly-forecast-block{
             display: flex;
             flex-direction: row;
@@ -278,7 +290,7 @@ body{
         }
     
         .city-search-input{
-
+            background-color: #2a254b7d;
             height: 40px;
             color: #FFF;
             font-weight: 500;
@@ -370,14 +382,10 @@ body{
         }
 
     }
-
 }
 
-
-
-
 .hidden{
-    display: none;
+    display: none !important;
 }
 
 .btn{
@@ -417,7 +425,6 @@ body{
    backdrop-filter: blur(2px);
    border-radius: 15px;
    padding: 10px;
-   
    
 }
 
