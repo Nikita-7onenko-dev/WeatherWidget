@@ -208,6 +208,7 @@ class WeatherWidget {
     }
 
     convertWindAzimuth(data, isShortMode) {
+        // Проверяем диапазон, если данные равны 0 или 360... и тд
         switch (true) {
             case (data === 0 || data === 360):
                 return isShortMode ? "C" : "Северный";
@@ -233,9 +234,7 @@ class WeatherWidget {
         let weatherData = this.cityWeatherData[cityNameForWeatherKey] || this.cityWeatherData[this.currentCity];
 
         // Вычисляем ключ:
-        // 1. Время суток
-        let timeOfDay = weatherData.current.is_day > 0 ? 'day' : 'night';
-        // 2. Вид осадков
+        // 1. Вид осадков
         let precipitationType;
         if (weatherData.current.weather_code === 0) {
             precipitationType = "clear";
@@ -247,6 +246,8 @@ class WeatherWidget {
         } else if (weatherData.current.weather_code >= 71 && weatherData.current.weather_code <= 77) {
             precipitationType = "snow";
         }
+        // 2. Время суток
+        let timeOfDay = weatherData.current.is_day > 0 ? 'day' : 'night';
 
         return `${precipitationType}_${timeOfDay}`;
     }
@@ -419,34 +420,28 @@ class WeatherWidget {
     weatherCodeInterpreter(data, isIconMode, isNight) {
         // Для режима возвращающего иконки
         if(isIconMode) {
-                if(data === 0 ){
-                    if(isNight){
-                        return `<i class="wi wi-night-clear"></i>`;
-                    } else {
-                        return `<i class="wi wi-day-sunny"></i>`;
-                    }
-                } else if(data >=1 && data <=2) {
-                    if(isNight){
-                        return `<i class="wi wi-night-alt-cloudy"></i>`;
-                    } else {
-                        return `<i class="wi wi-day-cloudy"></i>`; 
-                    }
-                } else if(data === 3) {
-                    return `<i class="wi wi-cloudy"></i>`;
-                } else if(data === 45) {
-                    return `<i class="wi wi-fog"></i>`;
-                } else if( data >= 46 && data <= 67) {
-                    return `<i class="wi wi-showers"></i>`;
-                } else if( data >= 71 && data <= 77) {
-                    return `<i class="wi wi-snow"></i>`;
-                } else if(data >= 80 && data <= 82){
-                    return `<i class="wi wi-rain"></i>`
-                } else if(data >= 82 && data <= 86) {
-                    return `<i class="wi wi-sleet"></i>`;
-                } else if(data >= 95 && data <= 99) {
-                    return `<i class="wi wi-thunderstorm"></i>`;
-                }
-                return;
+            if(data === 0 ){
+                return isNight ? `<i class="wi wi-night-clear"></i>` 
+                    : `<i class="wi wi-day-sunny"></i>`;
+            } else if(data >=1 && data <=2) {
+                return isNight ? `<i class="wi wi-night-alt-cloudy"></i>`
+                    : `<i class="wi wi-day-cloudy"></i>`;
+            } else if(data === 3) {
+                return `<i class="wi wi-cloudy"></i>`;
+            } else if(data === 45) {
+                return `<i class="wi wi-fog"></i>`;
+            } else if( data >= 46 && data <= 67) {
+                return `<i class="wi wi-showers"></i>`;
+            } else if( data >= 71 && data <= 77) {
+                return `<i class="wi wi-snow"></i>`;
+            } else if(data >= 80 && data <= 82){
+                return `<i class="wi wi-rain"></i>`
+            } else if(data >= 82 && data <= 86) {
+                return `<i class="wi wi-sleet"></i>`;
+            } else if(data >= 95 && data <= 99) {
+                return `<i class="wi wi-thunderstorm"></i>`;
+            }
+            return;
         }
 
         switch (data) {
@@ -844,7 +839,7 @@ class WeatherWidget {
         "Выйти из панели управления городами", "Отменить поиск" или
         если выбран результат поиска */
 
-        // Очищаем debounce и ставим флаг для отмены поиска на случай если был текст в поле ввода
+        // Очищаем debounce и ставим флаг для отмены поиска на случай если getCityCoords() попал в очередь
         this.isSearchCancelled = true;
         clearTimeout(this.autocompleteTimer);
 
