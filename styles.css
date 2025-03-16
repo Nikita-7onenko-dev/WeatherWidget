@@ -90,6 +90,18 @@ body{
             }
         }
 
+
+        .activated-forecast-button{
+            background-color: #726e8d74;
+            font-weight: 500;
+            border: 1px solid #fff;
+        }
+
+        .deactivated-forecast-button{
+            font-weight: initial;
+            border: none;
+        }
+
         .daily-forecast-block, .hourly-forecast-block{
             display: flex;
             flex-direction: row;
@@ -163,6 +175,7 @@ body{
     ::-webkit-scrollbar-thumb{
         width: 5px;
         background: #00000034;
+        border-radius:25px;
     }
     
 }
@@ -206,20 +219,14 @@ body{
     background: #726e8d32;
     backdrop-filter: blur(2px);
     
-    
     h2{
         font-size: 30px;
-        cursor: pointer;
         height: fit-content;
         text-align: right;
         user-select: none;
         font-weight: 500;
     }
 
-    h2:active{
-        transform: scale(0.9);
-        transition-duration: 0.25s;
-    }
 
     p{
         font-size: 18px;
@@ -234,78 +241,161 @@ body{
 }
 
 
-
-.city-list{
+.city-management-pane{
     position: absolute;
-    top: 0 ;
     right: 0;
-    min-width: 200px;
-    height: 100%;
-    width: auto;
-    max-width: 75%;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    background-color: #2a254b70;
+    backdrop-filter: blur(5px);
     border-radius: 10px;
-    overflow-y: auto;
-    padding: 10px;
-    background-size: auto;
+    padding: 20px 30px;
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    padding: 15px;
-    -webkit-tap-highlight-color: transparent;
-    background: #726e8d32;
-    backdrop-filter: blur(2px);
+    gap: 40px;
+    align-items: center;
+    overflow-y: scroll;
 
-    h2{
-        font-size: 22px;
-        cursor: pointer;
-        width: fit-content;
-        -webkit-tap-highlight-color: transparent;
-        max-width: 70%;
-    }
-
-    h2:active{
-        transform: scale(0.9);
-        transition-duration: 0.25s;
-    }
-
-    .list-elem{
+    .city-management-pane-hat{
         display: flex;
-        justify-content: space-between;
-        gap: 40px;
+        justify-content: center;
+        font-size: 25px;
+        position: relative;
+        width: 100%;
+        
+        button{
+           position: absolute;
+           left: 0;
+           top: -1px;
+           font-size: 25px;
+        }
 
-        .delete-btn{
-            opacity: 0.7;
-            svg{
-                fill: #000;
+        button:active{
+            transform: scale(0.9);
+        }
+    }
+
+    .city-search-form{
+        display: flex;
+        align-items: center;
+        position: relative;
+        gap: 5px;
+        
+        i{
+            position: absolute;
+            left: 15px;
+            font-size: 20px;
+            z-index: 1;
+        }
+    
+        .city-search-input{
+            background-color: #2a254b7d;
+            height: 40px;
+            color: #FFF;
+            font-weight: 500;
+            padding: 5px 10px 5px 45px;
+            border-radius: 10px;
+            font-size: 20px;
+            background-size: cover;
+            background-position:top;
+            background-repeat: no-repeat;
+
+        }
+
+        .cancel-search-Btn{
+            width: 80px;
+            height: 40px;
+            border-radius: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+            background: #726e8d32;
+            backdrop-filter: blur(2px); 
+            color: #FFF;
+        }
+
+        .cancel-search-Btn:active{
+            transform: scale(0.9);
+        }
+
+        .search-submit-button{
+            width: 80px;
+            height: 40px;
+
+            border-top-right-radius: 10px;
+            border-bottom-right-radius: 10px;
+
+        }
+    }
+
+    .list-of-added-cities{
+
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+
+        .list-elem{
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            padding: 20px;
+            height: fit-content;
+            border-radius: 15px;
+            align-items: center;  
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            
+            div{
+                max-width: 50%;
+                cursor: pointer;
+
+                h2{
+
+                    font-size: 23px;
+                    padding-bottom: 5px;
+                    width: fit-content;
+                 }
+
+                 span{
+                    font-size: 18px;
+                    padding-left: 2px;
+                 }
             }
-            svg:active{
-                fill:red;
-                stroke: red;
+
+    
+            .delete-btn{
+                cursor: pointer;
+                font-size: 22px;
+                color:  #fff;
+                background: #ff6a6a;
+                border-radius: 50%;
+                width: 45px;
+                height: 45px;
+            }
+
+            .delete-btn:active{
                 transform: scale(0.9);
-                transition-duration: 0.25s;
             }
     
         }
-        .delete-btn:active{
-            transform: scale(0.9);
-            transition-duration: 0.25s;
 
-        }
     }
 }
 
 .hidden{
-    display: none;
+    display: none !important;
 }
 
 .btn{
     padding: 10px;
     width: fit-content;
-    color: inherit;
     border-radius: 10px;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
     background: #726e8d32;
     backdrop-filter: blur(2px);
+    color: #FFF;
 }
 
 .btn:active{
@@ -314,26 +404,27 @@ body{
 }
 
 .search-results-pane{
-    position: absolute;
-    right: 5px;
-    left: 5px;
-    top: 20px;
-    bottom: 20px;
-    overflow-y: auto;
-    border: #cecece solid 2px;
-    border-radius: 10px;
-    padding: 15px;
     display: flex;
     flex-direction: column;
     gap: 20px;
-    background: #726e8d32;
-    backdrop-filter: blur(5px);
+}
+
+.search-results-pane{
+    p:nth-child(1){
+        color: #b6b6b6;
+        line-height: 18px;
+    }
+    
 }
 
 .search-results-elem{
    cursor: pointer; 
    font-size: 20px;
    -webkit-tap-highlight-color: transparent;
+   background-color: #726e8d2c;
+   backdrop-filter: blur(2px);
+   border-radius: 15px;
+   padding: 10px;
    
 }
 
@@ -402,6 +493,43 @@ body{
         }
     }
     
+}
+
+@media screen and (max-width: 420px) {
+    .city-management-pane{
+    
+        padding: 20px 20px;
+
+        .city-management-pane-hat{
+
+            .get-back-btn{
+                font-size: 20px;
+            }
+
+            p{
+                font-size: 20px;
+            }
+        }
+
+        .city-search-form{
+            min-width: 240px;
+
+            i{
+                font-size: 19px;
+                left: 7px;
+            }
+
+            .city-search-input{
+                width: 220px;
+                font-size: 15px;
+                padding: 5px 5px 5px 30px;
+            }
+
+            .cancel-search-Btn{
+                width: 70px;
+            }
+        }
+    }
 }
 
 @media screen and (max-width: 400px){
