@@ -346,10 +346,13 @@ body{
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
+            background-color: #2a254b7d;
+            position: relative;
             
             div{
                 max-width: 50%;
                 cursor: pointer;
+                z-index: 2;
 
                 h2{
 
@@ -364,7 +367,6 @@ body{
                  }
             }
 
-    
             .delete-btn{
                 cursor: pointer;
                 font-size: 22px;
@@ -373,6 +375,7 @@ body{
                 border-radius: 50%;
                 width: 45px;
                 height: 45px;
+                z-index: 2;
             }
 
             .delete-btn:active{
@@ -381,6 +384,15 @@ body{
     
         }
 
+        .list-elem::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.2));
+            z-index: 1;
+            border-radius: 15px;
+        }
+        
     }
 }
 
