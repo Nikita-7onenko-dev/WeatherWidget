@@ -17,7 +17,7 @@ Responsive weather widget on native js.
 ![Screenshot 2](./screenshots/main-screen2.png)
 
 ### Management pane
-![Screenshot 2](./screenshots/main-screen2.png)
+![Screenshot 2](./screenshots/management-pane.png)
 
 ## Technologies
 - HTML5, CSS3, SCSS (BEM)
