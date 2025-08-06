@@ -7,7 +7,6 @@ Responsive weather widget on native js.
 - Display current weather by geolocation
 - Switch between cities
 - Responsive design for mobile and desktop
-- 
 
 ## Screenshots
 
