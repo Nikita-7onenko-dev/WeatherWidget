@@ -44,6 +44,10 @@ class WeatherWidget {
             this.cityWeatherData[this.currentCity] = JSON.parse(localStorage.getItem(this.currentCity));
             // Делаем запрос по текущему городу
             await this.fetchWeather();
+            // Берем данные из localStorage
+            this.getCitiesFromLocalStorage();
+            // Обновляем данные всех городов из списка (кроме текущего this.currentCity)
+            this.updateCitiesListWeatherData(false);
         } else {
             // Получаем координаты по ip
             await this.fetchLocationByIP();
@@ -52,10 +56,6 @@ class WeatherWidget {
         }
         // Наполняем разметку на главном экране
         this.updateWeatherData()
-        // Берем данные из localStorage
-        this.getCitiesFromLocalStorage();
-        // Обновляем данные всех городов из списка (кроме текущего this.currentCity)
-        this.updateCitiesListWeatherData(false);
 
 
     }
