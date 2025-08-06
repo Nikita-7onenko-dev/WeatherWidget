@@ -11,13 +11,13 @@ Responsive weather widget on native js.
 ## Screenshots
 
 ### Main screen
-![Screenshot 1](./screenshots/main-screen.png)
+<img src="./screenshots/main-screen.png" alt="Main screen" width="400">
 
 ### Main screen
-![Screenshot 2](./screenshots/main-screen2.png)
+<img src="./screenshots/main-screen2.png" alt="Main screen2" width="400">
 
 ### Management pane
-![Screenshot 2](./screenshots/management-pane.png)
+<img src="./screenshots/management-pane.png" alt="Management pane" width="400">
 
 ## Technologies
 - HTML5, CSS3 (BEM)
