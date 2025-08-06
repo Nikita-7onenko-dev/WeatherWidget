@@ -2,6 +2,9 @@
 
 Responsive weather widget on native js.
 
+Originally created for JavaScript practice, with a design improvised without a predefined layout.
+Since then, I have adopted modern development approaches, but I keep this project as a reference point to showcase my progress.
+
 ## Functionality
 - Automatic IP city detection (without requesting geolocation permission)
 - Display current weather by geolocation
