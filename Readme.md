@@ -20,7 +20,7 @@ Responsive weather widget on native js.
 ![Screenshot 2](./screenshots/management-pane.png)
 
 ## Technologies
-- HTML5, CSS3, SCSS (BEM)
+- HTML5, CSS3 (BEM)
 - JavaScript
 - OpenWeather API
 
