@@ -27,6 +27,7 @@ Responsive weather widget on native js.
 ## How to run
 1. Clone the repository:
 ```bash
-git https://github.com/Nikita-7onenko-dev/WeatherWidget.git
+git clone https://github.com/Nikita-7onenko-dev/WeatherWidget.git
+```
 
 2. Run index.html file
