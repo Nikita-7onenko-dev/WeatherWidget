@@ -1,4 +1,3 @@
-// Виджет прогноз погоды с помощью класса, fetch и API 
 
 class WeatherWidget {
     constructor(container) {
@@ -7,7 +6,7 @@ class WeatherWidget {
         // Главная панель погоды
         this.mainWeatherBlock = document.createElement('div');
         // Текущий город, выбранный в главной панели, для получения погодных данных
-        this.currentCity = "Киев";
+        this.currentCity = "";
         // Часовой пояс и ID - для часов текущего города
         this.timezone;
         this.clockId = null;
@@ -20,7 +19,7 @@ class WeatherWidget {
         // Форма и поле ввода поиска городов
         this.citySearchForm = document.createElement('form');
         this.citySearchInput = document.createElement('input');
-        // Обработчики событий:
+        // Привязываем контекст к обработчикам событий:
         this.eventClickHandlers = this.eventClickHandlers.bind(this);
         this.formSubmitHandler = this.formSubmitHandler.bind(this);
         this.inputFocusHandler = this.inputFocusHandler.bind(this);
@@ -35,31 +34,43 @@ class WeatherWidget {
         this.renderMainWeatherBlock();
         // Инициализируем обработчики
         this.initEventHandlers();
-        // Берем данные из localStorage
-        if(localStorage.length > 0) {
-            this.getCitiesFromLocalStorage();
-            this.updateCitiesListWeatherData();
-            // Получаем данные по текущему городу из главной панели
-            let weatherData = await this.fetchWeather();
-            // Наполняем разметку данными
-            this.updateWeatherData(weatherData);
-        }
-
         // Инициализируем часы 
         this.clockRender(this.forecastElements.current.clockContainer);
+       // Если есть данные в localStorage
+        if(localStorage.length > 0) {
+            // Устанавливаем выбранный город из localStorage
+            this.currentCity = localStorage.getItem('currentCity');
+            // Берем координаты текущего города для обновления главного экрана
+            this.cityWeatherData[this.currentCity] = JSON.parse(localStorage.getItem(this.currentCity));
+            // Делаем запрос по текущему городу
+            await this.fetchWeather();
+        } else {
+            // Получаем координаты по ip
+            await this.fetchLocationByIP();
+            // И делаем запрос погодных данных
+            await this.fetchWeather();
+        }
+        // Наполняем разметку на главном экране
+        this.updateWeatherData()
+        // Берем данные из localStorage
+        this.getCitiesFromLocalStorage();
+        // Обновляем данные всех городов из списка (кроме текущего this.currentCity)
+        this.updateCitiesListWeatherData(false);
+
+
     }
 
     getCitiesFromLocalStorage() {
+    
         // Наполняем данными хранилище в экземпляре
         for(let i = 0; i < localStorage.length; i++) {
             let key = localStorage.key(i);
-            if(key === "currentCity") continue;
+            if(key === "currentCity" || key === this.currentCity) continue;
             let json = localStorage.getItem(key);
             this.cityWeatherData[key] = JSON.parse(json)
         }
+        // Сортируем список городов
         this.cityWeatherData = WeatherWidget.sortCities(this.cityWeatherData)
-        // Устанавливаем выбранный город из localStorage
-        this.currentCity = localStorage.getItem('currentCity')
     }
 
     cityWeatherData = {
@@ -88,6 +99,26 @@ class WeatherWidget {
                     .sort( ([keyA], [keyB]) => keyA.localeCompare(keyB) )
         );
     }
+
+    async fetchLocationByIP() {
+    try{
+        let response = await fetch('https://tiny-waterfall-4e64.nikitatrihomkin.workers.dev/');
+        if(!response.ok) throw new Error(`Ошибка сервера при запросе местоположения по IP - ${response.status}`)
+        
+        let location = await response.json();
+
+        this.currentCity = location.city;
+
+        this.cityWeatherData[location.city] = {
+            latitude: location.latitude,
+            longitude: location.longitude
+        };
+    
+    } catch(err) {
+        console.log(err)
+        console.log(err.message)
+    }
+}
 
     renderCityManagementPane() {
         // Основная панель управления городами
@@ -135,7 +166,7 @@ class WeatherWidget {
     async getCityCoords() {
         if(this.isSearchCancelled) return;
 
-        let chosenCity = this.citySearchInput.value;
+        let chosenCity = this.citySearchInput.value.trim();
         if(!chosenCity) {
             return;
         }
@@ -145,7 +176,7 @@ class WeatherWidget {
         }
 
         try {
-            let response = await fetch(`https://nominatim.openstreetmap.org/search?q=${chosenCity}&format=json`);
+            let response = await fetch(`https://for-native-js-w-w-openstreetmap-nominatim.nikitatrihomkin.workers.dev/?q=${chosenCity}`);
     
             this.citySearchResult = await response.json();
             
@@ -180,8 +211,7 @@ class WeatherWidget {
         searchResultsPane.classList.add('search-results-pane');
         // Подсказка
         let tooltip = document.createElement('p');
-        tooltip.textContent = `Если полученных результатов недостаточно,
-            уточните ваш запрос`;
+        tooltip.textContent = `Если полученных результатов недостаточно, уточните ваш запрос`;
         // Рендер
         searchResultsPane.append(tooltip);
         this.mainWeatherBlock.querySelector('.city-management-pane').append(searchResultsPane);
@@ -201,12 +231,18 @@ class WeatherWidget {
         this.cityWeatherData[cityName] = {longitude: citySearchResult[index].lon, latitude: citySearchResult[index].lat};
         // Сохранить в localStorage
         localStorage.setItem('currentCity', cityName)
-        localStorage.setItem(cityName, `{"latitude":${this.cityWeatherData[cityName].latitude}, "longitude": ${this.cityWeatherData[cityName].longitude}}`);
-
+        localStorage.setItem( cityName, JSON.stringify({ 
+            latitude: this.cityWeatherData[cityName].latitude,
+            longitude: this.cityWeatherData[cityName].longitude
+        }) );
+        // Сделать выбранный город - текущим(отображаемым на главной панели)
         this.currentCity = cityName;
+        // Отсортировать список
         this.cityWeatherData = WeatherWidget.sortCities(this.cityWeatherData);
-        let weatherData = await this.fetchWeather();
-        this.updateWeatherData(weatherData);
+        // Запрашиваем погодные данные по выбранному городу
+        await this.fetchWeather();
+        // Обновляем поля с данными на главном экране
+        this.updateWeatherData();
     }
 
     async fetchWeather(cityName) {
@@ -236,7 +272,7 @@ class WeatherWidget {
 
             console.log(weatherData);
 
-            return weatherData;
+            // return weatherData;
         } catch(error) {
             alert("Ошибка при запросе погодных данных");
             console.log(error);
@@ -288,18 +324,22 @@ class WeatherWidget {
         return `${precipitationType}_${timeOfDay}`;
     }
 
-    async updateCitiesListWeatherData() {
+    async updateCitiesListWeatherData(isIncludeCurrent) {
         // Обновляем данные всех городов из списка
-        const cityKeys = Object.keys(this.cityWeatherData);
+        let cityKeys = Object.keys(this.cityWeatherData);
+        cityKeys = isIncludeCurrent ? cityKeys : cityKeys.filter(cityName => cityName !== this.currentCity);
         await Promise.all( cityKeys.map( cityName => this.fetchWeather(cityName) ) );
-        // Как только обновили все - перерисовываем список и главный экран
+        // Как только обновили все - перерисовываем список
         this.renderCityList();
-        this.updateWeatherData();
+        // Если текущий город включен
+        if(isIncludeCurrent) {
+            // Обновляем главный экран
+            this.updateWeatherData();
+        }
     }
 
-    updateWeatherData(weatherData) {
-        // Берем данные из аргумента или из памяти?
-        let data = weatherData || this.cityWeatherData[this.currentCity];
+    updateWeatherData() {
+        let data = this.cityWeatherData[this.currentCity];
 
         // Расчет фонового изображения
         this.defineBackgroundImage(this.mainWeatherBlock, this.currentCity);
@@ -344,7 +384,6 @@ class WeatherWidget {
         // Подневный прогноз
         for(let i = 0; i < data.daily.time.length; i++) {
             // Строка с датой
-            
             this.forecastElements.daily.dateField[i].textContent = `${WeatherWidget.dateFormatting(data.daily.time[i], true)} ${WeatherWidget.defineWeekDay(data, true, i)}`;
             if(i === 0) {
                 this.forecastElements.daily.dateField[0].insertAdjacentHTML('beforeend', '<br>Сегодня');
@@ -398,7 +437,7 @@ class WeatherWidget {
                 // Сейчас ночь
                 precipitation.innerHTML = WeatherWidget.weatherCodeInterpreter(data.hourly.weather_code[currentHour + i], true, true);
 
-            } else if (sunsetHour === sunsetHour && data.current.is_day === 1){
+            } else if (sunsetHour === sunriseHour && data.current.is_day === 1){
                 // Полярный день
                 precipitation.innerHTML = WeatherWidget.weatherCodeInterpreter(data.hourly.weather_code[currentHour + i], true);
 
@@ -420,7 +459,7 @@ class WeatherWidget {
             clearInterval(this.clockId);
         }
 
-        const render = async () => {
+        const render = () => {
             // Возвращает объект-опций для форматирования времени
             let formatter = new Intl.DateTimeFormat(undefined, {
                 timeZone: this.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -436,8 +475,9 @@ class WeatherWidget {
             `;
 
             // Авто-обновление каждые 5 минут
-            if ( (Number(minutes) % 5 === 0) && seconds === '00') {
-                this.updateCitiesListWeatherData();
+            if ( (Number(minutes) % 5 === 0) && seconds === '01') {
+                // Обновляем список городов (включая текущий город)
+                this.updateCitiesListWeatherData(true);
             }
         }
             render();
@@ -540,21 +580,13 @@ class WeatherWidget {
         
         // Объект с опциями для форматирования
         let formatter =  new Intl.DateTimeFormat(undefined, {
-            hour: "2-digit",
+            hour: "numeric",
             minute: "2-digit",
         });
         // Время восхода
         sunriseTime = formatter.format(new Date(data.daily.sunrise[0]));
-        // Избавляемся от ведущего нуля
-        if(sunriseTime[0] === "0" && sunriseTime[1] !== "0") {
-            sunriseTime = sunriseTime.slice(1)
-        }
         // Время заката
         sunsetTime = formatter.format(new Date(data.daily.sunset[0]));
-        // Избавляемся от ведущего нуля
-        if(sunsetTime[0] === "0" && sunsetTime[1] !== "0") {
-            sunsetTime = sunsetTime.slice(1)
-        }
         return [sunriseTime, sunsetTime];
     }
 
@@ -625,7 +657,7 @@ class WeatherWidget {
         // Кнопка добавить город в список
         let addBtn = document.createElement('button');
         addBtn.setAttribute('type', 'button');
-        addBtn.setAttribute('data-action', 'add-city')
+        addBtn.setAttribute('data-management-pane', '')
         addBtn.textContent = "Управление городами";
         addBtn.classList.add('btn');
         cityBlock.append(addBtn);
@@ -722,7 +754,7 @@ class WeatherWidget {
         forecastBlock.classList.add('hourly-forecast-block');
         forecastBlock.classList.add('hidden');
 
-        // Создать и наполнить данными почасовые карточки
+        // Создать и наполнить полями почасовые карточки
         for(let i = 0; i < 24; i++) {
             let forecastElem = document.createElement('div');
             forecastElem.classList.add('hourly-forecast-elem');
@@ -851,7 +883,7 @@ class WeatherWidget {
             if (query) {
                 this.getCityCoords(query);
             }
-        }, 500)
+        }, 700)
     }
 
     inputFocusHandler() {
@@ -907,7 +939,7 @@ class WeatherWidget {
         // Отобразить/скрыть список городов, удалить/добавить город и тд
         const deleteBtnClick = event.target.closest('.delete-btn');
         const clickOnCityTitle = event.target.closest('.list-elem > div');
-        const addBtnClick = event.target.closest('[data-action]');
+        const openManagementPaneClick = event.target.closest('[data-management-pane]');
         const clickOnSearchResult = event.target.dataset.searchIndex;
         const clickOnGetBackBtn = event.target.closest('.get-back-btn');
         const clickOnForecastToggler = event.target.closest('[data-forecast-toggler]');
@@ -934,7 +966,8 @@ class WeatherWidget {
                     delete this.cityWeatherData[targetListElemTitle];
                     targetListElem.remove();
                     this.currentCity = this.listOfAddedCities.firstElementChild.firstElementChild.firstElementChild.textContent;
-                    localStorage.removeItem(targetListElemTitle)
+                    localStorage.removeItem(targetListElemTitle);
+                    localStorage.setItem('currentCity', this.currentCity)
                     this.updateWeatherData();
                 }, 400);
                
@@ -950,10 +983,12 @@ class WeatherWidget {
             }
         }
 
-        // Ну тут все очевидно надеюсь:)
-        if(addBtnClick) {
+        // Ну тут все очевидно надеюсь:) Если клик на "открыть панель управления"
+        if(openManagementPaneClick) {
+            // То блин открываем панель управления
             setTimeout( () => {
                 this.renderCityManagementPane();
+                // Добавляем обработчик на появившийся в разметке citySearchInput (он удаляется при clickOnGetBackBtn если что)
                 this.citySearchInput.addEventListener('blur', this.inputBlurHandler);
             }, 250);
         }
@@ -961,9 +996,13 @@ class WeatherWidget {
         /*Если клик на город из списка - 
         выбираем город для отображения погоды*/
         if(clickOnCityTitle) {
-            localStorage.setItem('currentCity', clickOnCityTitle.querySelector('h2').textContent);
+            // Устанавливаем выбранный город текущим в экземпляр
             this.currentCity = clickOnCityTitle.querySelector('h2').textContent;
+            // Так же устанавливаем выбранный город текущим в localStorage 
+            localStorage.setItem('currentCity', this.currentCity);
+            // Убираем панель управления
             this.mainWeatherBlock.querySelector('.city-management-pane').remove();
+            // Обновляем разметку
             this.updateWeatherData();
 
         };
@@ -987,7 +1026,7 @@ class WeatherWidget {
             this.citySearchInput.removeEventListener('blur', this.inputBlurHandler);
             // Закрываем панель управления
             setTimeout(() => {
-                this.cancelSearch()
+                this.cancelSearch();
                 this.mainWeatherBlock.querySelector('.city-management-pane').remove();
             }, 250);
         }
@@ -1026,6 +1065,7 @@ class WeatherWidget {
 
         // Если клик на кнопку "отменить поиск"
         if(clickOnSearchCancelBtn) {
+            // Ну тут все очевидно надеюсь:)
             setTimeout(() => {
                 this.cancelSearch();
             }, 150);
