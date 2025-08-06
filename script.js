@@ -1,4 +1,3 @@
-// Виджет прогноз погоды с помощью класса, fetch и API 
 
 class WeatherWidget {
     constructor(container) {
@@ -7,7 +6,7 @@ class WeatherWidget {
         // Главная панель погоды
         this.mainWeatherBlock = document.createElement('div');
         // Текущий город, выбранный в главной панели, для получения погодных данных
-        this.currentCity = "Киев";
+        this.currentCity = "";
         // Часовой пояс и ID - для часов текущего города
         this.timezone;
         this.clockId = null;
@@ -45,13 +44,20 @@ class WeatherWidget {
             this.cityWeatherData[this.currentCity] = JSON.parse(localStorage.getItem(this.currentCity));
             // Делаем запрос по текущему городу
             await this.fetchWeather();
-            // Наполняем разметку на главном экране
-            this.updateWeatherData()
-            // Берем данные из localStorage
-            this.getCitiesFromLocalStorage();
-            // Обновляем данные всех городов из списка (кроме текущего this.currentCity)
-            this.updateCitiesListWeatherData(false);
+        } else {
+            // Получаем координаты по ip
+            await this.fetchLocationByIP();
+            // И делаем запрос погодных данных
+            await this.fetchWeather();
         }
+        // Наполняем разметку на главном экране
+        this.updateWeatherData()
+        // Берем данные из localStorage
+        this.getCitiesFromLocalStorage();
+        // Обновляем данные всех городов из списка (кроме текущего this.currentCity)
+        this.updateCitiesListWeatherData(false);
+
+
     }
 
     getCitiesFromLocalStorage() {
@@ -93,6 +99,26 @@ class WeatherWidget {
                     .sort( ([keyA], [keyB]) => keyA.localeCompare(keyB) )
         );
     }
+
+    async fetchLocationByIP() {
+    try{
+        let response = await fetch('https://tiny-waterfall-4e64.nikitatrihomkin.workers.dev/');
+        if(!response.ok) throw new Error(`Ошибка сервера при запросе местоположения по IP - ${response.status}`)
+        
+        let location = await response.json();
+
+        this.currentCity = location.city;
+
+        this.cityWeatherData[location.city] = {
+            latitude: location.latitude,
+            longitude: location.longitude
+        };
+    
+    } catch(err) {
+        console.log(err)
+        console.log(err.message)
+    }
+}
 
     renderCityManagementPane() {
         // Основная панель управления городами
@@ -140,7 +166,7 @@ class WeatherWidget {
     async getCityCoords() {
         if(this.isSearchCancelled) return;
 
-        let chosenCity = this.citySearchInput.value;
+        let chosenCity = this.citySearchInput.value.trim();
         if(!chosenCity) {
             return;
         }
@@ -150,7 +176,7 @@ class WeatherWidget {
         }
 
         try {
-            let response = await fetch(`https://nominatim.openstreetmap.org/search?q=${chosenCity}&format=json`);
+            let response = await fetch(`https://for-native-js-w-w-openstreetmap-nominatim.nikitatrihomkin.workers.dev/?q=${chosenCity}`);
     
             this.citySearchResult = await response.json();
             
@@ -411,7 +437,7 @@ class WeatherWidget {
                 // Сейчас ночь
                 precipitation.innerHTML = WeatherWidget.weatherCodeInterpreter(data.hourly.weather_code[currentHour + i], true, true);
 
-            } else if (sunsetHour === sunsetHour && data.current.is_day === 1){
+            } else if (sunsetHour === sunriseHour && data.current.is_day === 1){
                 // Полярный день
                 precipitation.innerHTML = WeatherWidget.weatherCodeInterpreter(data.hourly.weather_code[currentHour + i], true);
 
@@ -554,21 +580,13 @@ class WeatherWidget {
         
         // Объект с опциями для форматирования
         let formatter =  new Intl.DateTimeFormat(undefined, {
-            hour: "2-digit",
+            hour: "numeric",
             minute: "2-digit",
         });
         // Время восхода
         sunriseTime = formatter.format(new Date(data.daily.sunrise[0]));
-        // Избавляемся от ведущего нуля
-        if(sunriseTime[0] === "0" && sunriseTime[1] !== "0") {
-            sunriseTime = sunriseTime.slice(1)
-        }
         // Время заката
         sunsetTime = formatter.format(new Date(data.daily.sunset[0]));
-        // Избавляемся от ведущего нуля
-        if(sunsetTime[0] === "0" && sunsetTime[1] !== "0") {
-            sunsetTime = sunsetTime.slice(1)
-        }
         return [sunriseTime, sunsetTime];
     }
 
@@ -736,7 +754,7 @@ class WeatherWidget {
         forecastBlock.classList.add('hourly-forecast-block');
         forecastBlock.classList.add('hidden');
 
-        // Создать и наполнить данными почасовые карточки
+        // Создать и наполнить полями почасовые карточки
         for(let i = 0; i < 24; i++) {
             let forecastElem = document.createElement('div');
             forecastElem.classList.add('hourly-forecast-elem');
@@ -967,7 +985,7 @@ class WeatherWidget {
 
         // Ну тут все очевидно надеюсь:) Если клик на "открыть панель управления"
         if(openManagementPaneClick) {
-            // То блин открываем панель управления (да ладно?)
+            // То блин открываем панель управления
             setTimeout( () => {
                 this.renderCityManagementPane();
                 // Добавляем обработчик на появившийся в разметке citySearchInput (он удаляется при clickOnGetBackBtn если что)
@@ -1008,7 +1026,7 @@ class WeatherWidget {
             this.citySearchInput.removeEventListener('blur', this.inputBlurHandler);
             // Закрываем панель управления
             setTimeout(() => {
-                this.cancelSearch()
+                this.cancelSearch();
                 this.mainWeatherBlock.querySelector('.city-management-pane').remove();
             }, 250);
         }
